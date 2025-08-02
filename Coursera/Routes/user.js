@@ -1,11 +1,29 @@
 import { Router } from "express";
+import {userModel} from "../db"
+import { success } from "zod";
 export const userRouter = Router();
 
 // Signup Route
-userRouter.post('/signup', (req, res) => {
+userRouter.post('/signup', async (req, res) => {
+  const{email,password,firstName,LastName}=req.body;//add zod validation and hash password
+  try {
+      await userModel.create({
+    email:email,
+    password:password,
+    firstName:firstName,
+    lastName:lastName
+  })
   res.json({
-    message: 'signup end-point'
+    success:true,
+    message: 'SignUp Successfully!'
   });
+    
+  } catch (error) {
+    return res.json({
+      success:false,
+      message:error.message
+    })
+  }
 });
 
 // Login Route
