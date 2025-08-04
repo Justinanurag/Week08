@@ -9,10 +9,7 @@ export const connectDB = async () => {
       throw new Error("❌ MONGODB_URI is not defined in .env file");
     }
 
-    await mongoose.connect(`${MONGO_URI}/Coursera`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(`${MONGO_URI}/Coursera`);
     console.log("✅ MongoDB connected successfully!");
   } catch (error) {
     console.error("❌ MongoDB connection error:", error.message);
@@ -39,20 +36,30 @@ const adminSchema = new Schema({
 });
 
 // ✅ Course Schema
-const courseSchema = new Schema({
-  title: { type: String, required: true },
-  description: String,
-  price: { type: Number, required: true },
+const courseSchema = new mongoose.Schema({
+  title: String,
+  price: Number,
   imageUrl: String,
-  creatorId: { type: ObjectId, ref: "admin", required: true },
+  creatorId: mongoose.Schema.Types.ObjectId,
 });
 
-// ✅ Purchase Schema
-const purchaseSchema = new Schema({
-  userId: { type: ObjectId, ref: "user", required: true },
-  courseId: { type: ObjectId, ref: "course", required: true },
-  purchaseDate: { type: Date, default: Date.now },
+const purchaseSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "User" // optional if you need user details later
+  },
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "Course" // 🔥 this must match your course model name
+  },
+  purchaseDate: {
+    type: Date,
+    default: Date.now
+  }
 });
+
 
 // ✅ Export Models
 export const userModel = mongoose.model("user", userSchema);

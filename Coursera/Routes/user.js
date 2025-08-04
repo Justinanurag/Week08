@@ -1,23 +1,34 @@
 import { Router } from "express";
-import { purchaseModel, userModel } from "../db.js";
+import { courseModel, purchaseModel, userModel } from "../db.js";
 import { success } from "zod";
 export const userRouter = Router();
 import jwt from "jsonwebtoken";
 import { userMiddleware } from "../middleware/userMiddleware.js";
 
-
-// Signup Route
-userRouter.post("/signup", async (req, res) => {
-  const { email, password, firstName, lastName } = req.body; //add zod validation and hash password
+ //add zod validation and hash password
   //Add node mailer to send mail
+// Signup Route (Assuming you're using Express)
+userRouter.post("/signup", async (req, res) => {
+  const { email, password, firstName, lastName } = req.body;
+
+  // Validate input fields
+  if (!email || !password || !firstName || !lastName) {
+    return res.json({
+      success: false,
+      message: "Email, password, firstName, and lastName are required!",
+    });
+  }
+
   try {
+    // Create user
     await userModel.create({
       email: email,
       password: password,
       firstName: firstName,
       lastName: lastName,
     });
-    res.json({
+
+    return res.json({
       success: true,
       message: "SignUp Successfully!",
     });
@@ -28,6 +39,7 @@ userRouter.post("/signup", async (req, res) => {
     });
   }
 });
+
 
 // Login Route
 userRouter.post("/login", async (req, res) => {
@@ -66,12 +78,22 @@ userRouter.post('/logout',(req,res)=>{
 
 userRouter.get("/purchase",userMiddleware,async (req, res) => {
   const userId=req.userId;
-const purchases= await purchaseModel.findOne({
+const purchases= await purchaseModel.find({
   userId,
 })
+const courseIds = [
+  ...new Set(purchases.map(p => p.courseId.toString()))
+];
+
+const courseData = await courseModel.find({
+  _id: { $in: courseIds }
+});
+
+
   res.json({
     success:true,
-    message: "purchase end-point",
-    purchases
+    message: "Course purchased Successfully!!",
+    purchases,
+    courseData
   });
 });
