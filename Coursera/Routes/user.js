@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { userModel } from "../db.js";
+import { purchaseModel, userModel } from "../db.js";
 import { success } from "zod";
 export const userRouter = Router();
 import jwt from "jsonwebtoken";
+import { userMiddleware } from "../middleware/userMiddleware.js";
 
 
 // Signup Route
@@ -63,8 +64,14 @@ userRouter.post('/logout',(req,res)=>{
 // add logout function 
 })
 
-userRouter.get("/purchase", (req, res) => {
+userRouter.get("/purchase",userMiddleware,async (req, res) => {
+  const userId=req.userId;
+const purchases= await purchaseModel.findOne({
+  userId,
+})
   res.json({
+    success:true,
     message: "purchase end-point",
+    purchases
   });
 });

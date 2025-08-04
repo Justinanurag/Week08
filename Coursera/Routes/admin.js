@@ -92,41 +92,74 @@ adminRouter.post("/course", adminMiddleware, async (req, res) => {
   }
 });
 
-
 // Update a course
-adminRouter.put('/course', adminMiddleware, async (req, res) => {
+adminRouter.put("/course", adminMiddleware, async (req, res) => {
   try {
     const adminId = req.userId;
     const { title, description, imageUrl, price, courseId } = req.body;
 
+    // Validate input fields
     if (!title || !description || !imageUrl || !price || !courseId) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required',
+        message:
+          "All fields (title, description, imageUrl, price, courseId) are required.",
       });
     }
 
-    const updateResult = await courseModel.updateOne(
+    // Attempt to update the course
+    const updateResponse = await courseModel.updateOne(
       { _id: courseId, creatorId: adminId },
       { $set: { title, description, imageUrl, price } }
     );
 
-    if (updateResult.matchedCount === 0) {
+    // Check if the course was found and updated
+    if (updateResponse.matchedCount === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found or you are not the creator',
+        message:
+          "Course not found or you are not authorized to update this course.",
       });
     }
 
-    res.status(200).json({
+    if (updateResponse.modifiedCount === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No changes were made. The data may already be up to date.",
+      });
+    }
+
+    // Success
+    return res.status(200).json({
       success: true,
-      message: 'Course updated successfully',
+      message: "Course updated successfully.",
     });
   } catch (error) {
-    console.error('Error updating course:', error);
-    res.status(500).json({
+    console.error("Error updating course:", error);
+    return res.status(500).json({
       success: false,
-      message: 'Internal Server Error',
+      message: "Internal server error. Please try again later.",
+    });
+  }
+});
+
+//get data of course
+adminRouter.get("/course/bulk", adminMiddleware, async (req, res) => {
+  try {
+    const adminId = req.userId;
+
+    const courses = await courseModel.find({ creatorId: adminId });
+
+    return res.status(200).json({
+      success: true,
+      message: "Courses fetched successfully.",
+      data: courses,
+    });
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch courses. " + error.message,
     });
   }
 });
